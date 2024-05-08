@@ -4,7 +4,7 @@
 struct Piece {
   int i;
   int j;
-  char pieceUnicode[4];
+  char pieceUnicode[16];
 };
 
 void move_piece(struct Piece board[8][8], struct Piece currentLoc,
