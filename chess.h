@@ -33,6 +33,7 @@ struct Movements {
 struct PieceMovement {
   char piece[8];
   struct Movements allowed_movements[8];
+  int set_up_movement;
 };
 
 void move_piece(char board[8][8][8], struct Location *curr_loc,
@@ -48,4 +49,5 @@ struct PieceMovement *get_move_rule(char piece[8]);
 
 bool movement_allowed(struct Movements *allowed_movements,
                       const struct Location *curr_loc,
-                      const struct Location *next_location);
+                      const struct Location *next_location,
+                      int total_movement_rule);

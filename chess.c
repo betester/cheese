@@ -3,21 +3,22 @@
 #include <stdio.h>
 #include <string.h>
 
-#define EMPTY_VALUE -10
+#define TOTAL_PIECE 12
+#define MAX_ROW 8
+#define MAX_COL 8
 
-// 1 indexed because why not ?
-struct PieceMovement char_movements[13];
-int direction_movement[12][2];
+struct PieceMovement CHAR_MOVEMENTS[TOTAL_PIECE];
+int DIRECTION_MOVEMENTS[TOTAL_PIECE][2];
 
-int total_piece_movement_set = 0;
+int total_piece_movement_set = -1;
 
 void set_move_rule(struct PieceMovement piece_movement) {
 
   int next_position = total_piece_movement_set + 1;
 
-  for (int i = 0; i <= total_piece_movement_set; i++) {
+  for (int i = 0; i < total_piece_movement_set; i++) {
 
-    if (char_movements[i].piece == piece_movement.piece) {
+    if (CHAR_MOVEMENTS[i].piece == piece_movement.piece) {
       printf("Already assign %s movement rule replacing the rule\n",
              piece_movement.piece);
       next_position = i;
@@ -25,14 +26,19 @@ void set_move_rule(struct PieceMovement piece_movement) {
     }
   }
 
-  if (next_position >= 13) {
-    printf("Cannot set more than 8 rules for piece movement for now\n");
+  if (next_position >= TOTAL_PIECE) {
+    printf("Cannot set more than 12 rules for piece movement for now\n");
     return;
   }
 
   printf("Setting up rule for piece %s\n", piece_movement.piece);
-  for (int i = 0; i < 8; i++) {
-    char_movements[next_position].allowed_movements[i] =
+
+  strcpy(CHAR_MOVEMENTS[next_position].piece, piece_movement.piece);
+  CHAR_MOVEMENTS[next_position].set_up_movement =
+      piece_movement.set_up_movement;
+
+  for (int i = 0; i < piece_movement.set_up_movement; i++) {
+    CHAR_MOVEMENTS[next_position].allowed_movements[i] =
         piece_movement.allowed_movements[i];
   }
 
@@ -42,14 +48,14 @@ void set_move_rule(struct PieceMovement piece_movement) {
 }
 
 void set_direction_rule(enum Direction direction, int i, int j) {
-  direction_movement[direction][0] = i;
-  direction_movement[direction][1] = j;
+  DIRECTION_MOVEMENTS[direction][0] = i;
+  DIRECTION_MOVEMENTS[direction][1] = j;
 }
 
 struct PieceMovement *get_move_rule(char *piece) {
-  for (int i = 0; i < 13; i++) {
-    if (char_movements[i].piece == piece) {
-      return &char_movements[i];
+  for (int i = 0; i < TOTAL_PIECE; i++) {
+    if (strcmp(CHAR_MOVEMENTS[i].piece, piece) == 0) {
+      return &CHAR_MOVEMENTS[i];
     }
   }
   return NULL;
@@ -57,8 +63,25 @@ struct PieceMovement *get_move_rule(char *piece) {
 
 bool movement_allowed(struct Movements *allowed_movements,
                       const struct Location *curr_loc,
-                      const struct Location *next_location) {
-  return false;
+                      const struct Location *next_location,
+                      int total_movement_rule) {
+  bool allowed = false;
+  printf("%d", total_movement_rule);
+  for (int i = 0; i < total_movement_rule; i++) {
+    for (int j = 1; j <= allowed_movements[i].max_movement; j++) {
+      int column_translation =
+          curr_loc->i +
+          DIRECTION_MOVEMENTS[allowed_movements[i].direction][0] * j;
+      int row_translation =
+          curr_loc->j +
+          DIRECTION_MOVEMENTS[allowed_movements[i].direction][1] * j;
+      printf("(%d %d) (%d %d)\n", column_translation, row_translation,
+             next_location->i, next_location->j);
+      allowed = allowed || (next_location->i == column_translation &&
+                            next_location->j == row_translation);
+    }
+  }
+  return allowed;
 };
 
 void move_piece(char (*board)[8][8], struct Location *curr_loc,
@@ -75,24 +98,28 @@ void move_piece(char (*board)[8][8], struct Location *curr_loc,
   struct PieceMovement *piece_movement = get_move_rule(curr_piece);
 
   if (piece_movement == NULL) {
-    printf("No rule assigned for the piece %s", curr_piece);
+    printf("No rule assigned for the piece %s\n", curr_piece);
     return;
   }
 
   // check if the movements allowed
   struct Movements *allowed_movements = piece_movement->allowed_movements;
-  bool move_is_legal = movement_allowed(allowed_movements, curr_loc, next_loc);
+  bool move_is_legal = movement_allowed(allowed_movements, curr_loc, next_loc,
+                                        piece_movement->set_up_movement);
 
   if (!move_is_legal) {
-    printf("Movement is not allowed");
+    printf("Movement is not allowed\n");
     return;
   }
 
-  strcpy(board[curr_loc->i][curr_loc->j], next_piece);
-  strcpy(board[curr_loc->i][curr_loc->j], curr_piece);
+  char temp[8];
+
+  strcpy(temp, board[curr_loc->i][curr_loc->j]);
+  strcpy(board[curr_loc->i][curr_loc->j], board[next_loc->i][next_loc->j]);
+  strcpy(board[next_loc->i][next_loc->j], temp);
 }
 
-void render_board(char (*board)[8][8]) {
+void render_board(char (*board)[MAX_COL][MAX_ROW]) {
   printf("*");
   for (int i = 0; i < 8; i++) {
     printf("%d", i);

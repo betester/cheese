@@ -15,6 +15,7 @@
 #define BLACK_ROOK "♜"
 #define BLACK_QUEEN "♛"
 #define BLACK_KING "♚"
+#define EMPTY_PEICE "-"
 
 int main() {
 
@@ -40,44 +41,44 @@ int main() {
           BLACK_PAWN,
       },
       {
-          "-",
-          "-",
-          "-",
-          "-",
-          "-",
-          "-",
-          "-",
-          "-",
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
       },
       {
-          "-",
-          "-",
-          "-",
-          "-",
-          "-",
-          "-",
-          "-",
-          "-",
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
       },
       {
-          "-",
-          "-",
-          "-",
-          "-",
-          "-",
-          "-",
-          "-",
-          "-",
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
       },
       {
-          "-",
-          "-",
-          "-",
-          "-",
-          "-",
-          "-",
-          "-",
-          "-",
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
+          EMPTY_PEICE,
       },
       {
           WHITE_PAWN,
@@ -113,7 +114,7 @@ int main() {
           {1, DIAGONAL_DOWN_LEFT, NOT_ATTACKED},
           {1, DIAGIONAL_DOWN_RIGHT, NOT_ATTACKED},
       },
-  };
+      8};
 
   struct PieceMovement white_king_movement = {
       WHITE_KING,
@@ -127,82 +128,73 @@ int main() {
           {1, DIAGONAL_DOWN_LEFT, NOT_ATTACKED},
           {1, DIAGIONAL_DOWN_RIGHT, NOT_ATTACKED},
       },
-  };
+      8};
 
-  struct PieceMovement white_queen_movement = {
-      WHITE_QUEEN,
-      {
-          {7, DOWN},
-          {7, UP},
-          {7, LEFT},
-          {7, RIGHT},
-          {7, DIAGONAL_UP_RIGHT},
-          {7, DIAGONAL_UP_LEFT},
-          {7, DIAGONAL_DOWN_LEFT},
-          {7, DIAGIONAL_DOWN_RIGHT},
-      },
-  };
+  struct PieceMovement white_queen_movement = {WHITE_QUEEN,
+                                               {
+                                                   {7, DOWN},
+                                                   {7, UP},
+                                                   {7, LEFT},
+                                                   {7, RIGHT},
+                                                   {7, DIAGONAL_UP_RIGHT},
+                                                   {7, DIAGONAL_UP_LEFT},
+                                                   {7, DIAGONAL_DOWN_LEFT},
+                                                   {7, DIAGIONAL_DOWN_RIGHT},
+                                               },
+                                               8};
 
-  struct PieceMovement black_queen_movement = {
-      BLACK_QUEEN,
-      {
-          {7, DOWN},
-          {7, UP},
-          {7, LEFT},
-          {7, RIGHT},
-          {7, DIAGONAL_UP_RIGHT},
-          {7, DIAGONAL_UP_LEFT},
-          {7, DIAGONAL_DOWN_LEFT},
-          {7, DIAGIONAL_DOWN_RIGHT},
-      },
-  };
+  struct PieceMovement black_queen_movement = {BLACK_QUEEN,
+                                               {
+                                                   {7, DOWN},
+                                                   {7, UP},
+                                                   {7, LEFT},
+                                                   {7, RIGHT},
+                                                   {7, DIAGONAL_UP_RIGHT},
+                                                   {7, DIAGONAL_UP_LEFT},
+                                                   {7, DIAGONAL_DOWN_LEFT},
+                                                   {7, DIAGIONAL_DOWN_RIGHT},
+                                               },
+                                               8};
 
-  struct PieceMovement black_knight_movement = {
-      BLACK_KNIGHT,
-      {{1, L_MOVEMENT_TOP_LEFT},
-       {1, L_MOVEMENT_TOP_RIGHT},
-       {1, L_MOVEMENT_BOTTOM_LEFT},
-       {1, L_MOVEMENT_BOTTOM_RIGHT}},
-  };
+  struct PieceMovement black_knight_movement = {BLACK_KNIGHT,
+                                                {{1, L_MOVEMENT_TOP_LEFT},
+                                                 {1, L_MOVEMENT_TOP_RIGHT},
+                                                 {1, L_MOVEMENT_BOTTOM_LEFT},
+                                                 {1, L_MOVEMENT_BOTTOM_RIGHT}},
+                                                4};
 
-  struct PieceMovement white_knight_movement = {
-      WHITE_KNIGHT,
-      {{1, L_MOVEMENT_TOP_LEFT},
-       {1, L_MOVEMENT_TOP_RIGHT},
-       {1, L_MOVEMENT_BOTTOM_LEFT},
-       {1, L_MOVEMENT_BOTTOM_RIGHT}},
-  };
+  struct PieceMovement white_knight_movement = {WHITE_KNIGHT,
+                                                {{1, L_MOVEMENT_TOP_LEFT},
+                                                 {1, L_MOVEMENT_TOP_RIGHT},
+                                                 {1, L_MOVEMENT_BOTTOM_LEFT},
+                                                 {1, L_MOVEMENT_BOTTOM_RIGHT}},
+                                                4};
 
   // think about en passant and  first 2 move later on
   struct PieceMovement black_pawn_movement = {
-      BLACK_PAWN, {{1, DOWN}, {2, DOWN, ONLY_ONCE}}};
-  struct PieceMovement white_pawn_movement = {WHITE_PAWN, {{1, DOWN}}};
+      BLACK_PAWN, {{1, DOWN}, {2, DOWN, ONLY_ONCE}}, 2};
+  struct PieceMovement white_pawn_movement = {
+      WHITE_PAWN, {{1, UP}, {2, UP, ONLY_ONCE}}, 2};
 
-  struct PieceMovement black_bishop_movement = {
-      BLACK_BISHOP,
-      {{7, DIAGONAL_UP_LEFT},
-       {7, DIAGONAL_UP_RIGHT},
-       {7, DIAGONAL_DOWN_LEFT},
-       {7, DIAGIONAL_DOWN_RIGHT}},
-  };
+  struct PieceMovement black_bishop_movement = {BLACK_BISHOP,
+                                                {{7, DIAGONAL_UP_LEFT},
+                                                 {7, DIAGONAL_UP_RIGHT},
+                                                 {7, DIAGONAL_DOWN_LEFT},
+                                                 {7, DIAGIONAL_DOWN_RIGHT}},
+                                                4};
 
-  struct PieceMovement white_bishop_movement = {
-      WHITE_BISHOP,
-      {{7, DIAGONAL_UP_LEFT},
-       {7, DIAGONAL_UP_RIGHT},
-       {7, DIAGONAL_DOWN_LEFT},
-       {7, DIAGIONAL_DOWN_RIGHT}},
-  };
+  struct PieceMovement white_bishop_movement = {WHITE_BISHOP,
+                                                {{7, DIAGONAL_UP_LEFT},
+                                                 {7, DIAGONAL_UP_RIGHT},
+                                                 {7, DIAGONAL_DOWN_LEFT},
+                                                 {7, DIAGIONAL_DOWN_RIGHT}},
+                                                4};
 
   struct PieceMovement black_rook_movement = {
-      BLACK_ROOK,
-      {{7, UP}, {7, DOWN}, {7, LEFT}, {7, RIGHT}},
-  };
+      BLACK_ROOK, {{7, UP}, {7, DOWN}, {7, LEFT}, {7, RIGHT}}, 4};
 
   struct PieceMovement white_rook_movement = {
-      WHITE_ROOK,
-      {{7, UP}, {7, DOWN}, {7, LEFT}, {7, RIGHT}},
-  };
+      WHITE_ROOK, {{7, UP}, {7, DOWN}, {7, LEFT}, {7, RIGHT}}, 4};
 
   set_direction_rule(UP, -1, 0);
   set_direction_rule(LEFT, 0, -1);
