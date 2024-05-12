@@ -16,14 +16,17 @@ enum Direction {
   L_MOVEMENT_BOTTOM_RIGHT,
 };
 
+enum MovementCondition { NOT_ATTACKED, ONLY_ONCE };
+
 struct Location {
-  unsigned int i : 3;
-  unsigned int j : 3;
+  unsigned int i;
+  unsigned int j;
 };
 
 struct Movements {
   unsigned int max_movement : 3;
   enum Direction direction;
+  enum MovementCondition movement_condition;
 };
 
 struct PieceMovement {
@@ -31,8 +34,8 @@ struct PieceMovement {
   struct Movements allowed_movements[8];
 };
 
-void move_piece(char board[8][8][8], struct Location curr_loc,
-                struct Location next_loc);
+void move_piece(char board[8][8][8], struct Location *curr_loc,
+                struct Location *next_loc);
 
 void render_board(char board[8][8][8]);
 

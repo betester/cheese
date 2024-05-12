@@ -1,6 +1,7 @@
 
 #include "chess.h"
 #include <stdio.h>
+#include <string.h>
 
 // 1 indexed because why not ?
 struct PieceMovement char_movements[13];
@@ -41,17 +42,24 @@ void move_piece(char (*board)[8][8], struct Location *curr_loc,
   if (next_loc->i < 0 || next_loc->i >= 8 || next_loc->j < 0 ||
       next_loc->j >= 8) {
     printf("Out of bounds move, piece will not be moved");
+    return;
   }
 
-  char *target_piece = board[next_loc->i][next_loc->j];
-  char *current_piece = board[curr_loc->i][curr_loc->j];
-
-  (*board)[next_loc->i][next_loc->j] = *current_piece;
-  (*board)[curr_loc->i][curr_loc->j] = *target_piece;
+  char temp[8];
+  strcpy(temp, board[next_loc->i][next_loc->j]);
+  strcpy(board[next_loc->i][next_loc->j], board[curr_loc->i][curr_loc->j]);
+  strcpy(board[curr_loc->i][curr_loc->j], temp);
 }
 
 void render_board(char (*board)[8][8]) {
+  printf("*");
   for (int i = 0; i < 8; i++) {
+    printf("%d", i);
+  }
+  printf("\n");
+
+  for (int i = 0; i < 8; i++) {
+    printf("%d", i);
     for (int j = 0; j < 8; j++) {
       printf("%s", board[i][j]);
     }

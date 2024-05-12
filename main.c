@@ -20,7 +20,7 @@ int main() {
 
   char board[8][8][8] = {
       {
-          BLACK_KING,
+          BLACK_ROOK,
           BLACK_KNIGHT,
           BLACK_BISHOP,
           BLACK_QUEEN,
