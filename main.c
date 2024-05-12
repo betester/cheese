@@ -204,6 +204,19 @@ int main() {
       {{7, UP}, {7, DOWN}, {7, LEFT}, {7, RIGHT}},
   };
 
+  set_direction_rule(UP, -1, 0);
+  set_direction_rule(LEFT, 0, -1);
+  set_direction_rule(RIGHT, 0, 1);
+  set_direction_rule(DOWN, 1, 0);
+  set_direction_rule(DIAGONAL_UP_LEFT, -1, -1);
+  set_direction_rule(DIAGONAL_UP_RIGHT, -1, 1);
+  set_direction_rule(DIAGONAL_DOWN_LEFT, 1, -1);
+  set_direction_rule(DIAGIONAL_DOWN_RIGHT, 1, 1);
+  set_direction_rule(L_MOVEMENT_TOP_LEFT, -2, -1);
+  set_direction_rule(L_MOVEMENT_TOP_RIGHT, -2, 1);
+  set_direction_rule(L_MOVEMENT_BOTTOM_LEFT, 2, -1);
+  set_direction_rule(L_MOVEMENT_BOTTOM_RIGHT, 2, 1);
+
   set_move_rule(black_king_movement);
   set_move_rule(white_king_movement);
   set_move_rule(black_queen_movement);

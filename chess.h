@@ -1,4 +1,5 @@
 
+#include <stdbool.h>
 #include <stdint.h>
 
 enum Direction {
@@ -40,3 +41,11 @@ void move_piece(char board[8][8][8], struct Location *curr_loc,
 void render_board(char board[8][8][8]);
 
 void set_move_rule(struct PieceMovement piece_movement);
+
+void set_direction_rule(enum Direction direction, int i, int j);
+
+struct PieceMovement *get_move_rule(char piece[8]);
+
+bool movement_allowed(struct Movements *allowed_movements,
+                      const struct Location *curr_loc,
+                      const struct Location *next_location);
