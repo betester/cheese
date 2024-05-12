@@ -36,8 +36,19 @@ void set_move_rule(struct PieceMovement piece_movement) {
   }
 }
 
-void move_piece(char (*board)[8][8], struct Location curr_loc,
-                struct Location next_loc) {}
+void move_piece(char (*board)[8][8], struct Location *curr_loc,
+                struct Location *next_loc) {
+  if (next_loc->i < 0 || next_loc->i >= 8 || next_loc->j < 0 ||
+      next_loc->j >= 8) {
+    printf("Out of bounds move, piece will not be moved");
+  }
+
+  char *target_piece = board[next_loc->i][next_loc->j];
+  char *current_piece = board[curr_loc->i][curr_loc->j];
+
+  (*board)[next_loc->i][next_loc->j] = *current_piece;
+  (*board)[curr_loc->i][curr_loc->j] = *target_piece;
+}
 
 void render_board(char (*board)[8][8]) {
   for (int i = 0; i < 8; i++) {

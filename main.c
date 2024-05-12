@@ -101,33 +101,31 @@ int main() {
       },
   };
 
-  char someVal;
-
   struct PieceMovement black_king_movement = {
       BLACK_KING,
       {
-          {1, DOWN},
-          {1, UP},
-          {1, LEFT},
-          {1, RIGHT},
-          {1, DIAGONAL_UP_RIGHT},
-          {1, DIAGONAL_UP_LEFT},
-          {1, DIAGONAL_DOWN_LEFT},
-          {1, DIAGIONAL_DOWN_RIGHT},
+          {1, DOWN, NOT_ATTACKED},
+          {1, UP, NOT_ATTACKED},
+          {1, LEFT, NOT_ATTACKED},
+          {1, RIGHT, NOT_ATTACKED},
+          {1, DIAGONAL_UP_RIGHT, NOT_ATTACKED},
+          {1, DIAGONAL_UP_LEFT, NOT_ATTACKED},
+          {1, DIAGONAL_DOWN_LEFT, NOT_ATTACKED},
+          {1, DIAGIONAL_DOWN_RIGHT, NOT_ATTACKED},
       },
   };
 
   struct PieceMovement white_king_movement = {
       WHITE_KING,
       {
-          {1, DOWN},
-          {1, UP},
-          {1, LEFT},
-          {1, RIGHT},
-          {1, DIAGONAL_UP_RIGHT},
-          {1, DIAGONAL_UP_LEFT},
-          {1, DIAGONAL_DOWN_LEFT},
-          {1, DIAGIONAL_DOWN_RIGHT},
+          {1, DOWN, NOT_ATTACKED},
+          {1, UP, NOT_ATTACKED},
+          {1, LEFT, NOT_ATTACKED},
+          {1, RIGHT, NOT_ATTACKED},
+          {1, DIAGONAL_UP_RIGHT, NOT_ATTACKED},
+          {1, DIAGONAL_UP_LEFT, NOT_ATTACKED},
+          {1, DIAGONAL_DOWN_LEFT, NOT_ATTACKED},
+          {1, DIAGIONAL_DOWN_RIGHT, NOT_ATTACKED},
       },
   };
 
@@ -176,7 +174,8 @@ int main() {
   };
 
   // think about en passant and  first 2 move later on
-  struct PieceMovement black_pawn_movement = {BLACK_PAWN, {{1, DOWN}}};
+  struct PieceMovement black_pawn_movement = {
+      BLACK_PAWN, {{1, DOWN}, {2, DOWN, ONLY_ONCE}}};
   struct PieceMovement white_pawn_movement = {WHITE_PAWN, {{1, DOWN}}};
 
   struct PieceMovement black_bishop_movement = {
@@ -218,9 +217,14 @@ int main() {
   set_move_rule(black_rook_movement);
   set_move_rule(white_rook_movement);
 
+  struct Location current_loc;
+  struct Location next_loc;
+
   while (1) {
     render_board(board);
-    scanf("%s", &someVal);
+    scanf("%u %u %u %u", &current_loc.i, &current_loc.j, &next_loc.i,
+          &next_loc.j);
+    move_piece(board, &current_loc, &next_loc);
   }
   return 0;
 }
