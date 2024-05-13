@@ -1,5 +1,6 @@
 
 #include "chess.h"
+#include <stdbool.h>
 #include <stdio.h>
 
 #define WHITE_PAWN "♙"
@@ -19,217 +20,106 @@
 
 int main() {
 
-  char board[8][8][8] = {
-      {
-          BLACK_ROOK,
-          BLACK_KNIGHT,
-          BLACK_BISHOP,
-          BLACK_QUEEN,
-          BLACK_KING,
-          BLACK_BISHOP,
-          BLACK_KNIGHT,
-          BLACK_ROOK,
-      },
-      {
-          BLACK_PAWN,
-          BLACK_PAWN,
-          BLACK_PAWN,
-          BLACK_PAWN,
-          BLACK_PAWN,
-          BLACK_PAWN,
-          BLACK_PAWN,
-          BLACK_PAWN,
-      },
-      {
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-      },
-      {
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-      },
-      {
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-      },
-      {
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-          EMPTY_PEICE,
-      },
-      {
-          WHITE_PAWN,
-          WHITE_PAWN,
-          WHITE_PAWN,
-          WHITE_PAWN,
-          WHITE_PAWN,
-          WHITE_PAWN,
-          WHITE_PAWN,
-          WHITE_PAWN,
-      },
-      {
-          WHITE_ROOK,
-          WHITE_KNIGHT,
-          WHITE_BISHOP,
-          WHITE_QUEEN,
-          WHITE_KING,
-          WHITE_BISHOP,
-          WHITE_KNIGHT,
-          WHITE_ROOK,
-      },
-  };
 
-  struct PieceMovement black_king_movement = {
-      BLACK_KING,
-      {
-          {1, DOWN, NOT_ATTACKED},
-          {1, UP, NOT_ATTACKED},
-          {1, LEFT, NOT_ATTACKED},
-          {1, RIGHT, NOT_ATTACKED},
-          {1, DIAGONAL_UP_RIGHT, NOT_ATTACKED},
-          {1, DIAGONAL_UP_LEFT, NOT_ATTACKED},
-          {1, DIAGONAL_DOWN_LEFT, NOT_ATTACKED},
-          {1, DIAGIONAL_DOWN_RIGHT, NOT_ATTACKED},
-      },
-      8};
+    struct Movements king_movements[8] = {
+        {1, DOWN, NOT_ATTACKED},
+        {1, UP, NOT_ATTACKED},
+        {1, LEFT, NOT_ATTACKED},
+        {1, RIGHT, NOT_ATTACKED},
+        {1, DIAGONAL_UP_RIGHT, NOT_ATTACKED},
+        {1, DIAGONAL_UP_LEFT, NOT_ATTACKED},
+        {1, DIAGONAL_DOWN_LEFT, NOT_ATTACKED},
+        {1, DIAGIONAL_DOWN_RIGHT, NOT_ATTACKED},
+    };
 
-  struct PieceMovement white_king_movement = {
-      WHITE_KING,
-      {
-          {1, DOWN, NOT_ATTACKED},
-          {1, UP, NOT_ATTACKED},
-          {1, LEFT, NOT_ATTACKED},
-          {1, RIGHT, NOT_ATTACKED},
-          {1, DIAGONAL_UP_RIGHT, NOT_ATTACKED},
-          {1, DIAGONAL_UP_LEFT, NOT_ATTACKED},
-          {1, DIAGONAL_DOWN_LEFT, NOT_ATTACKED},
-          {1, DIAGIONAL_DOWN_RIGHT, NOT_ATTACKED},
-      },
-      8};
+    struct Movements queen_movements[8] = {
+        {7, DOWN},
+        {7, UP},
+        {7, LEFT},
+        {7, RIGHT},
+        {7, DIAGONAL_UP_RIGHT},
+        {7, DIAGONAL_UP_LEFT},
+        {7, DIAGONAL_DOWN_LEFT},
+        {7, DIAGIONAL_DOWN_RIGHT},
+    };
 
-  struct PieceMovement white_queen_movement = {WHITE_QUEEN,
-                                               {
-                                                   {7, DOWN},
-                                                   {7, UP},
-                                                   {7, LEFT},
-                                                   {7, RIGHT},
-                                                   {7, DIAGONAL_UP_RIGHT},
-                                                   {7, DIAGONAL_UP_LEFT},
-                                                   {7, DIAGONAL_DOWN_LEFT},
-                                                   {7, DIAGIONAL_DOWN_RIGHT},
-                                               },
-                                               8};
+    struct Movements knight_movement[8] =  {
+        {1, L_MOVEMENT_TOP_LEFT},
+        {1, L_MOVEMENT_TOP_RIGHT},
+        {1, L_MOVEMENT_BOTTOM_LEFT},
+        {1, L_MOVEMENT_BOTTOM_RIGHT}
+    };
 
-  struct PieceMovement black_queen_movement = {BLACK_QUEEN,
-                                               {
-                                                   {7, DOWN},
-                                                   {7, UP},
-                                                   {7, LEFT},
-                                                   {7, RIGHT},
-                                                   {7, DIAGONAL_UP_RIGHT},
-                                                   {7, DIAGONAL_UP_LEFT},
-                                                   {7, DIAGONAL_DOWN_LEFT},
-                                                   {7, DIAGIONAL_DOWN_RIGHT},
-                                               },
-                                               8};
+    struct Movements pawn_movement[8] = {
+        {1, DOWN},
+        {2, DOWN, ONLY_ONCE},
+        {1, DIAGONAL_DOWN_LEFT, OCCUPIED_BY_OPPS},
+        {1, DIAGIONAL_DOWN_RIGHT, OCCUPIED_BY_OPPS}
+    };
 
-  struct PieceMovement black_knight_movement = {BLACK_KNIGHT,
-                                                {{1, L_MOVEMENT_TOP_LEFT},
-                                                 {1, L_MOVEMENT_TOP_RIGHT},
-                                                 {1, L_MOVEMENT_BOTTOM_LEFT},
-                                                 {1, L_MOVEMENT_BOTTOM_RIGHT}},
-                                                4};
+    struct Movements bishop_movements[8] = {
+        {7, DIAGONAL_UP_LEFT},
+        {7, DIAGONAL_UP_RIGHT},
+        {7, DIAGONAL_DOWN_LEFT},
+        {7, DIAGIONAL_DOWN_RIGHT}
+    };
 
-  struct PieceMovement white_knight_movement = {WHITE_KNIGHT,
-                                                {{1, L_MOVEMENT_TOP_LEFT},
-                                                 {1, L_MOVEMENT_TOP_RIGHT},
-                                                 {1, L_MOVEMENT_BOTTOM_LEFT},
-                                                 {1, L_MOVEMENT_BOTTOM_RIGHT}},
-                                                4};
+    struct Movements rook_movements[8] = {
+        {7, UP},
+        {7, DOWN},
+        {7, LEFT},
+        {7, RIGHT}
+    };
 
-  // think about en passant and  first 2 move later on
-  struct PieceMovement black_pawn_movement = {
-      BLACK_PAWN, {{1, DOWN}, {2, DOWN, ONLY_ONCE}}, 2};
-  struct PieceMovement white_pawn_movement = {
-      WHITE_PAWN, {{1, UP}, {2, UP, ONLY_ONCE}}, 2};
+    struct Movements empty_piece_movement[8] = {};
 
-  struct PieceMovement black_bishop_movement = {BLACK_BISHOP,
-                                                {{7, DIAGONAL_UP_LEFT},
-                                                 {7, DIAGONAL_UP_RIGHT},
-                                                 {7, DIAGONAL_DOWN_LEFT},
-                                                 {7, DIAGIONAL_DOWN_RIGHT}},
-                                                4};
+    struct Piece *black_king = create_piece(BLACK_KING, king_movements, 8, BLACK);
+    struct Piece *black_queen = create_piece(BLACK_QUEEN, queen_movements, 8, BLACK);
+    struct Piece *black_knight = create_piece(BLACK_KNIGHT, knight_movement, 4, BLACK);
+    struct Piece *black_pawn = create_piece(BLACK_PAWN, pawn_movement, 8, BLACK);
+    struct Piece *black_bishop = create_piece(BLACK_BISHOP, bishop_movements, 4, BLACK);
+    struct Piece *black_rook = create_piece(WHITE_ROOK, rook_movements, 4, WHITE);
 
-  struct PieceMovement white_bishop_movement = {WHITE_BISHOP,
-                                                {{7, DIAGONAL_UP_LEFT},
-                                                 {7, DIAGONAL_UP_RIGHT},
-                                                 {7, DIAGONAL_DOWN_LEFT},
-                                                 {7, DIAGIONAL_DOWN_RIGHT}},
-                                                4};
+    struct Piece *white_queen = create_piece(WHITE_QUEEN, queen_movements, 8, WHITE);
+    struct Piece *white_king = create_piece(WHITE_KING, king_movements, 8, WHITE);
+    struct Piece *white_knight = create_piece(WHITE_KNIGHT, knight_movement, 4, WHITE);
+    struct Piece *white_pawn = create_piece(WHITE_PAWN, pawn_movement, 8, WHITE);
+    struct Piece *white_bishop = create_piece(WHITE_BISHOP, bishop_movements, 4, WHITE);
+    struct Piece *white_rook = create_piece(WHITE_ROOK, rook_movements, 4, WHITE);
 
-  struct PieceMovement black_rook_movement = {
-      BLACK_ROOK, {{7, UP}, {7, DOWN}, {7, LEFT}, {7, RIGHT}}, 4};
+    struct Piece *empty_piece = create_piece(EMPTY_PEICE, empty_piece_movement, 0, NEUTRAL);
 
-  struct PieceMovement white_rook_movement = {
-      WHITE_ROOK, {{7, UP}, {7, DOWN}, {7, LEFT}, {7, RIGHT}}, 4};
+    set_direction_rule(UP, -1, 0);
+    set_direction_rule(LEFT, 0, -1);
+    set_direction_rule(RIGHT, 0, 1);
+    set_direction_rule(DOWN, 1, 0);
+    set_direction_rule(DIAGONAL_UP_LEFT, -1, -1);
+    set_direction_rule(DIAGONAL_UP_RIGHT, -1, 1);
+    set_direction_rule(DIAGONAL_DOWN_LEFT, 1, -1);
+    set_direction_rule(DIAGIONAL_DOWN_RIGHT, 1, 1);
+    set_direction_rule(L_MOVEMENT_TOP_LEFT, -2, -1);
+    set_direction_rule(L_MOVEMENT_TOP_RIGHT, -2, 1);
+    set_direction_rule(L_MOVEMENT_BOTTOM_LEFT, 2, -1);
+    set_direction_rule(L_MOVEMENT_BOTTOM_RIGHT, 2, 1);
 
-  set_direction_rule(UP, -1, 0);
-  set_direction_rule(LEFT, 0, -1);
-  set_direction_rule(RIGHT, 0, 1);
-  set_direction_rule(DOWN, 1, 0);
-  set_direction_rule(DIAGONAL_UP_LEFT, -1, -1);
-  set_direction_rule(DIAGONAL_UP_RIGHT, -1, 1);
-  set_direction_rule(DIAGONAL_DOWN_LEFT, 1, -1);
-  set_direction_rule(DIAGIONAL_DOWN_RIGHT, 1, 1);
-  set_direction_rule(L_MOVEMENT_TOP_LEFT, -2, -1);
-  set_direction_rule(L_MOVEMENT_TOP_RIGHT, -2, 1);
-  set_direction_rule(L_MOVEMENT_BOTTOM_LEFT, 2, -1);
-  set_direction_rule(L_MOVEMENT_BOTTOM_RIGHT, 2, 1);
+    struct Piece *board[8][8] = {
+        {black_rook, black_knight, black_bishop, black_king, black_queen, black_bishop, black_knight, black_rook},
+        {black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn},
+        {empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece},
+        {empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece},
+        {empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece},
+        {empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece},
+        {white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn},
+        {white_rook, white_knight, white_bishop, white_king, white_queen, white_bishop, white_knight, white_rook}
+    };
 
-  set_move_rule(black_king_movement);
-  set_move_rule(white_king_movement);
-  set_move_rule(black_queen_movement);
-  set_move_rule(white_queen_movement);
-  set_move_rule(black_knight_movement);
-  set_move_rule(white_knight_movement);
-  set_move_rule(black_pawn_movement);
-  set_move_rule(white_pawn_movement);
-  set_move_rule(black_bishop_movement);
-  set_move_rule(white_bishop_movement);
-  set_move_rule(black_rook_movement);
-  set_move_rule(white_rook_movement);
+    struct Location current_loc;
+    struct Location next_loc;
 
-  struct Location current_loc;
-  struct Location next_loc;
-
-  while (1) {
-    render_board(board);
-    scanf("%u %u %u %u", &current_loc.i, &current_loc.j, &next_loc.i,
-          &next_loc.j);
-    move_piece(board, &current_loc, &next_loc);
-  }
-  return 0;
+    while (true) {
+        render_board(board);
+        scanf("%u %u %u %u", &current_loc.i, &current_loc.j, &next_loc.i, &next_loc.j);
+        move_piece(board, &current_loc, &next_loc);
+    }
+    return 0;
 }
