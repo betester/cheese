@@ -20,7 +20,6 @@
 
 int main() {
 
-
     Movements king_movements[8] = {
         {1, DOWN, NOT_ATTACKED},
         {1, UP, NOT_ATTACKED},
@@ -44,17 +43,28 @@ int main() {
     };
 
     Movements knight_movement[8] =  {
-        {1, L_MOVEMENT_TOP_LEFT},
-        {1, L_MOVEMENT_TOP_RIGHT},
-        {1, L_MOVEMENT_BOTTOM_LEFT},
-        {1, L_MOVEMENT_BOTTOM_RIGHT}
+        {1, L_STAND_TOP_LEFT},
+        {1, L_SLEEP_TOP_LEFT},
+        {1, L_STAND_TOP_RIGHT},
+        {1, L_SLEEP_TOP_RIGHT},
+        {1, L_STAND_BOTTOM_LEFT},
+        {1, L_SLEEP_BOTTOM_LEFT},
+        {1, L_STAND_BOTTOM_RIGHT},
+        {1, L_SLEEP_BOTTOM_RIGHT},
     };
 
-    Movements pawn_movement[8] = {
+    Movements black_pawn_movement[8] = {
         {1, DOWN},
         {2, DOWN, ONLY_ONCE},
         {1, DIAGONAL_DOWN_LEFT, OCCUPIED_BY_OPPS},
         {1, DIAGIONAL_DOWN_RIGHT, OCCUPIED_BY_OPPS}
+    };
+
+    Movements white_pawn_movement[8] = {
+        {1, UP},
+        {2, UP, ONLY_ONCE},
+        {1, DIAGONAL_UP_LEFT, OCCUPIED_BY_OPPS},
+        {1, DIAGONAL_UP_RIGHT, OCCUPIED_BY_OPPS}
     };
 
     Movements bishop_movements[8] = {
@@ -75,19 +85,15 @@ int main() {
 
     Piece *black_king = create_piece(BLACK_KING, king_movements, 8, BLACK);
     Piece *black_queen = create_piece(BLACK_QUEEN, queen_movements, 8, BLACK);
-    Piece *black_knight = create_piece(BLACK_KNIGHT, knight_movement, 4, BLACK);
-    Piece *black_pawn = create_piece(BLACK_PAWN, pawn_movement, 8, BLACK);
-    Piece *black_bishop = create_piece(BLACK_BISHOP, bishop_movements, 4, BLACK);
+    Piece *black_knight = create_piece(BLACK_KNIGHT, knight_movement, 8, BLACK);
+    Piece *black_bishop = create_piece(BLACK_BISHOP, bishop_movements, 8, BLACK);
     Piece *black_rook = create_piece(WHITE_ROOK, rook_movements, 4, WHITE);
 
     Piece *white_queen = create_piece(WHITE_QUEEN, queen_movements, 8, WHITE);
     Piece *white_king = create_piece(WHITE_KING, king_movements, 8, WHITE);
-    Piece *white_knight = create_piece(WHITE_KNIGHT, knight_movement, 4, WHITE);
-    Piece *white_pawn = create_piece(WHITE_PAWN, pawn_movement, 8, WHITE);
-    Piece *white_bishop = create_piece(WHITE_BISHOP, bishop_movements, 4, WHITE);
+    Piece *white_knight = create_piece(WHITE_KNIGHT, knight_movement, 8, WHITE);
+    Piece *white_bishop = create_piece(WHITE_BISHOP, bishop_movements, 8, WHITE);
     Piece *white_rook = create_piece(WHITE_ROOK, rook_movements, 4, WHITE);
-
-    Piece *empty_piece = create_piece(EMPTY_PEICE, empty_piece_movement, 0, NEUTRAL);
 
     set_direction_rule(UP, -1, 0);
     set_direction_rule(LEFT, 0, -1);
@@ -97,21 +103,42 @@ int main() {
     set_direction_rule(DIAGONAL_UP_RIGHT, -1, 1);
     set_direction_rule(DIAGONAL_DOWN_LEFT, 1, -1);
     set_direction_rule(DIAGIONAL_DOWN_RIGHT, 1, 1);
-    set_direction_rule(L_MOVEMENT_TOP_LEFT, -2, -1);
-    set_direction_rule(L_MOVEMENT_TOP_RIGHT, -2, 1);
-    set_direction_rule(L_MOVEMENT_BOTTOM_LEFT, 2, -1);
-    set_direction_rule(L_MOVEMENT_BOTTOM_RIGHT, 2, 1);
+    set_direction_rule(L_STAND_TOP_LEFT, -2, -1);
+    set_direction_rule(L_SLEEP_TOP_LEFT, -1, -2);
+    set_direction_rule(L_STAND_TOP_RIGHT, -2, 1);
+    set_direction_rule(L_SLEEP_TOP_RIGHT, -1, 2);
+    set_direction_rule(L_STAND_BOTTOM_LEFT, 2, -1);
+    set_direction_rule(L_SLEEP_BOTTOM_LEFT, -1, 2);
+    set_direction_rule(L_STAND_BOTTOM_RIGHT, 2, 1);
+    set_direction_rule(L_SLEEP_BOTTOM_RIGHT, 1, 2);
 
     Piece *board[8][8] = {
         {black_rook, black_knight, black_bishop, black_king, black_queen, black_bishop, black_knight, black_rook},
-        {black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn, black_pawn},
-        {empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece},
-        {empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece},
-        {empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece},
-        {empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece, empty_piece},
-        {white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn, white_pawn},
+        {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
+        {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
+        {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
+        {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
+        {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
+        {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
         {white_rook, white_knight, white_bishop, white_king, white_queen, white_bishop, white_knight, white_rook}
     };
+
+    // fills up the second upper row with black pawn
+    for (int i = 0; i < 8; i++) {
+        board[1][i] = create_piece(BLACK_PAWN, black_pawn_movement, 8, BLACK);
+    }
+
+    // fills up the second lower row with white pawn
+    for (int i = 0; i < 8; i++) {
+        board[6][i] = create_piece(WHITE_PAWN, white_pawn_movement, 8, WHITE);
+    }
+
+    // filling up those null values
+    for (int i = 2; i <= 5; i++) {
+        for (int j = 0; j < 8; j++) {
+            board[i][j] = create_piece(EMPTY_PEICE, empty_piece_movement, 0, NEUTRAL);
+        }
+    }
 
     Location current_loc;
     Location next_loc;

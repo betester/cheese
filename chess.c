@@ -54,7 +54,6 @@ bool movement_allowed(Movements *allowed_movements,
                       const Location *next_location,
                       int total_movement_rule) {
   bool allowed = false;
-  printf("%d", total_movement_rule);
   for (int i = 0; i < total_movement_rule; i++) {
     for (int j = 1; j <= allowed_movements[i].max_movement; j++) {
       int column_translation = curr_loc->i + DIRECTION_MOVEMENTS[allowed_movements[i].direction][0] * j;
@@ -76,28 +75,23 @@ void move_piece(Piece *board[8][8], Location *curr_loc,
   Piece *curr_piece = board[curr_loc->i][curr_loc->j];
   Piece *next_piece = board[next_loc->i][next_loc->j];
 
-  Piece *piece_movement = get_move_rule(curr_piece->piece_symbol);
+  Movements *piece_movement = curr_piece->allowed_movements;
 
   if (piece_movement == NULL) {
     printf("No rule assigned for the piece %s\n", curr_piece->piece_symbol);
     return;
   }
 
-  // check if the movements allowed
-  Movements *allowed_movements = piece_movement->allowed_movements;
-  bool move_is_legal = movement_allowed(allowed_movements, curr_loc, next_loc,
-                                        piece_movement->set_up_movement);
+  bool move_is_legal = movement_allowed(piece_movement, curr_loc, next_loc,
+                                        curr_piece->set_up_movement);
 
   if (!move_is_legal) {
     printf("Movement is not allowed\n");
     return;
   }
 
-  char temp[8];
-
-  strcpy(temp, board[curr_loc->i][curr_loc->j]->piece_symbol);
-  strcpy(board[curr_loc->i][curr_loc->j]->piece_symbol, board[next_loc->i][next_loc->j]->piece_symbol);
-  strcpy(board[next_loc->i][next_loc->j]->piece_symbol, temp);
+  board[next_loc->i][next_loc->j] = curr_piece;
+  board[curr_loc->i][curr_loc->j] = next_piece;
 }
 
 void render_board(Piece *board[MAX_COL][MAX_ROW]) {
