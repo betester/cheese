@@ -8,20 +8,20 @@
 #define MAX_ROW 8
 #define MAX_COL 8
 
-struct Piece CHAR_MOVEMENTS[TOTAL_PIECE];
+Piece CHAR_MOVEMENTS[TOTAL_PIECE];
 int DIRECTION_MOVEMENTS[TOTAL_PIECE][2];
 
 int total_piece_movement_set = -1;
 
-void set_direction_rule(enum Direction direction, int i, int j) {
+void set_direction_rule(Direction direction, int i, int j) {
   DIRECTION_MOVEMENTS[direction][0] = i;
   DIRECTION_MOVEMENTS[direction][1] = j;
 }
 
-struct Piece *create_piece(char piece_symbol[4],
-                           struct Movements allowed_movements[8],
-                           int set_up_movement, enum Player player) {
-  struct Piece *piece = (struct Piece*) malloc(sizeof(struct Piece));
+Piece *create_piece(char piece_symbol[8],
+                           Movements allowed_movements[8],
+                           int set_up_movement, Player player) {
+  Piece *piece = (struct Piece*) malloc(sizeof(Piece));
   strcpy(piece->piece_symbol, piece_symbol);
   piece->set_up_movement = set_up_movement;
   piece->player = player;
@@ -35,7 +35,7 @@ struct Piece *create_piece(char piece_symbol[4],
   return piece;
 }
 
-struct Piece *get_move_rule(char *piece) {
+Piece *get_move_rule(char *piece) {
   for (int i = 0; i < TOTAL_PIECE; i++) {
     if (strcmp(CHAR_MOVEMENTS[i].piece_symbol, piece) == 0) {
       return &CHAR_MOVEMENTS[i];
@@ -44,14 +44,14 @@ struct Piece *get_move_rule(char *piece) {
   return NULL;
 }
 
-bool satisfy_movement_condition(struct Piece *target_piece_position,
-                                enum MovementCondition condition) {
+bool satisfy_movement_condition(Piece *target_piece_position,
+                                MovementCondition condition) {
   return false;
 }
 
-bool movement_allowed(struct Movements *allowed_movements,
-                      const struct Location *curr_loc,
-                      const struct Location *next_location,
+bool movement_allowed(Movements *allowed_movements,
+                      const Location *curr_loc,
+                      const Location *next_location,
                       int total_movement_rule) {
   bool allowed = false;
   printf("%d", total_movement_rule);
@@ -65,18 +65,18 @@ bool movement_allowed(struct Movements *allowed_movements,
   return allowed;
 };
 
-void move_piece(struct Piece *board[8][8], struct Location *curr_loc,
-                struct Location *next_loc) {
+void move_piece(Piece *board[8][8], Location *curr_loc,
+                Location *next_loc) {
   if (next_loc->i < 0 || next_loc->i >= 8 || next_loc->j < 0 ||
       next_loc->j >= 8) {
     printf("Out of bounds move, piece will not be moved");
     return;
   }
 
-  struct Piece *curr_piece = board[curr_loc->i][curr_loc->j];
-  struct Piece *next_piece = board[next_loc->i][next_loc->j];
+  Piece *curr_piece = board[curr_loc->i][curr_loc->j];
+  Piece *next_piece = board[next_loc->i][next_loc->j];
 
-  struct Piece *piece_movement = get_move_rule(curr_piece->piece_symbol);
+  Piece *piece_movement = get_move_rule(curr_piece->piece_symbol);
 
   if (piece_movement == NULL) {
     printf("No rule assigned for the piece %s\n", curr_piece->piece_symbol);
@@ -84,7 +84,7 @@ void move_piece(struct Piece *board[8][8], struct Location *curr_loc,
   }
 
   // check if the movements allowed
-  struct Movements *allowed_movements = piece_movement->allowed_movements;
+  Movements *allowed_movements = piece_movement->allowed_movements;
   bool move_is_legal = movement_allowed(allowed_movements, curr_loc, next_loc,
                                         piece_movement->set_up_movement);
 
@@ -100,7 +100,7 @@ void move_piece(struct Piece *board[8][8], struct Location *curr_loc,
   strcpy(board[next_loc->i][next_loc->j]->piece_symbol, temp);
 }
 
-void render_board(struct Piece *board[MAX_COL][MAX_ROW]) {
+void render_board(Piece *board[MAX_COL][MAX_ROW]) {
   printf("*");
   for (int i = 0; i < MAX_ROW; i++) {
     printf("%d", i);
