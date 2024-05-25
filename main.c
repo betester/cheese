@@ -18,6 +18,42 @@
 #define BLACK_KING "♚"
 #define EMPTY_PEICE "-"
 
+bool occupied_by_opps_rule(Board *board, Location opp_location, Location our_location) {
+    Piece *opps_piece = board->board[opp_location.i][opp_location.j];
+    Piece *our_piece = board->board[our_location.i][our_location.j];
+
+    return our_piece->player != opps_piece->player;
+}
+
+bool only_once_rule(Board *board, Location opp_location, Location our_location) {
+    Piece *our_piece = board->board[our_location.i][our_location.j];
+    return our_piece->taken_move_state == 0;
+}
+
+bool not_attacked_rule(Board *board, const Location opps_location, const Location our_location) {
+
+    bool target_position_attacked = false;
+    Piece *our_piece = board->board[our_location.i][our_location.j];
+
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            Piece *piece = board->board[i][j];
+            if (piece != NULL && piece->player != our_piece->player) {
+                Movements *movements = piece->allowed_movements;
+                if (movement_allowed(movements, &opps_location, &our_location, piece->set_up_movement) != NULL) {
+                    return false;
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+bool en_passant_rule(Board *board, const Location opps_location, const Location our_location) {
+    return true;
+}
+
 int main() {
 
     Movements king_movements[8] = {
@@ -112,7 +148,11 @@ int main() {
     set_direction_rule(L_STAND_BOTTOM_RIGHT, 2, 1);
     set_direction_rule(L_SLEEP_BOTTOM_RIGHT, 1, 2);
 
-    Piece *board[8][8] = {
+    set_movement_condition_rule(OCCUPIED_BY_OPPS, occupied_by_opps_rule);
+    set_movement_condition_rule(ONLY_ONCE, only_once_rule);
+    set_movement_condition_rule(NOT_ATTACKED, not_attacked_rule);
+
+    Piece *chess_board[8][8] = {
         {black_rook, black_knight, black_bishop, black_king, black_queen, black_bishop, black_knight, black_rook},
         {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
         {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
@@ -125,28 +165,31 @@ int main() {
 
     // fills up the second upper row with black pawn
     for (int i = 0; i < 8; i++) {
-        board[1][i] = create_piece(BLACK_PAWN, black_pawn_movement, 8, BLACK);
+        chess_board[1][i] = create_piece(BLACK_PAWN, black_pawn_movement, 8, BLACK);
     }
 
     // fills up the second lower row with white pawn
     for (int i = 0; i < 8; i++) {
-        board[6][i] = create_piece(WHITE_PAWN, white_pawn_movement, 8, WHITE);
+        chess_board[6][i] = create_piece(WHITE_PAWN, white_pawn_movement, 8, WHITE);
     }
 
     // filling up those null values
     for (int i = 2; i <= 5; i++) {
         for (int j = 0; j < 8; j++) {
-            board[i][j] = create_piece(EMPTY_PEICE, empty_piece_movement, 0, NEUTRAL);
+            chess_board[i][j] = create_piece(EMPTY_PEICE, empty_piece_movement, 0, NEUTRAL);
         }
     }
+
+    Player player_order[2] = {WHITE, BLACK}; 
+    Board board = initialize_board(chess_board, player_order);
 
     Location current_loc;
     Location next_loc;
 
     while (true) {
-        render_board(board);
+        render_board(&board);
         scanf("%u %u %u %u", &current_loc.i, &current_loc.j, &next_loc.i, &next_loc.j);
-        move_piece(board, &current_loc, &next_loc);
+        move_piece(&board, &current_loc, &next_loc);
     }
     return 0;
 }

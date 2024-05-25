@@ -7,9 +7,12 @@
 #define TOTAL_PIECE 12
 #define MAX_ROW 8
 #define MAX_COL 8
+#define MAX_PLAYER 2
+#define MAX_MOVEMENT_CONDITION 4
 
 Piece CHAR_MOVEMENTS[TOTAL_PIECE];
 int DIRECTION_MOVEMENTS[TOTAL_PIECE][2];
+bool (*MOVEMENT_CONDITION[MAX_MOVEMENT_CONDITION]) (Board *board, Location opps_location, Location our_location);
 
 int total_piece_movement_set = -1;
 
@@ -35,45 +38,70 @@ Piece *create_piece(char piece_symbol[8],
   return piece;
 }
 
-Piece *get_move_rule(char *piece) {
-  for (int i = 0; i < TOTAL_PIECE; i++) {
-    if (strcmp(CHAR_MOVEMENTS[i].piece_symbol, piece) == 0) {
-      return &CHAR_MOVEMENTS[i];
-    }
-  }
-  return NULL;
-}
-
 bool satisfy_movement_condition(Piece *target_piece_position,
                                 MovementCondition condition) {
   return false;
 }
 
-bool movement_allowed(Movements *allowed_movements,
+
+void set_movement_condition_rule(MovementCondition condition, bool (*f)(Board *, Location, Location)) {
+  MOVEMENT_CONDITION[condition] = f;
+}
+
+Board initialize_board(Piece* pieces[8][8], Player* player_order) {
+
+  Board board;
+
+  for (int i = 0; i < MAX_PLAYER; i++) {
+    board.player_order[i] = player_order[i];
+  }
+
+  for (int i = 0; i < MAX_ROW; i++) {
+    for (int j = 0; j <MAX_COL; j++) {
+      board.board[i][j] = pieces[i][j];
+    }
+  }
+
+  board.current_player = 0;
+
+  return board;
+}
+
+Movements *movement_allowed(Movements *allowed_movements,
                       const Location *curr_loc,
                       const Location *next_location,
                       int total_movement_rule) {
-  bool allowed = false;
+  Movements *allowed_movement = NULL;
   for (int i = 0; i < total_movement_rule; i++) {
+    bool current_movement_is_allowed = false;
     for (int j = 1; j <= allowed_movements[i].max_movement; j++) {
       int column_translation = curr_loc->i + DIRECTION_MOVEMENTS[allowed_movements[i].direction][0] * j;
       int row_translation = curr_loc->j + DIRECTION_MOVEMENTS[allowed_movements[i].direction][1] * j;
-      allowed = allowed || (next_location->i == column_translation && next_location->j == row_translation);
+      current_movement_is_allowed = current_movement_is_allowed|| (next_location->i == column_translation && next_location->j == row_translation);
+    }
+    
+    if (current_movement_is_allowed) {
+      allowed_movements = &allowed_movements[i];
     }
   }
-  return allowed;
+  return allowed_movements;
 };
 
-void move_piece(Piece *board[8][8], Location *curr_loc,
+void move_piece(Board *board, Location *curr_loc,
                 Location *next_loc) {
-  if (next_loc->i < 0 || next_loc->i >= 8 || next_loc->j < 0 ||
-      next_loc->j >= 8) {
+  if (next_loc->i < 0 || next_loc->i >= MAX_ROW || next_loc->j < 0 ||
+      next_loc->j >= MAX_COL) {
     printf("Out of bounds move, piece will not be moved");
     return;
   }
 
-  Piece *curr_piece = board[curr_loc->i][curr_loc->j];
-  Piece *next_piece = board[next_loc->i][next_loc->j];
+  Piece *curr_piece = board->board[curr_loc->i][curr_loc->j];
+  Piece *next_piece = board->board[next_loc->i][next_loc->j];
+
+  if (curr_piece->player != board->player_order[board->current_player]) {
+    printf("player %d cannot make move because player %d should make the move\n", curr_piece->player, board->player_order[board->current_player]);
+    return;
+  }
 
   Movements *piece_movement = curr_piece->allowed_movements;
 
@@ -82,19 +110,31 @@ void move_piece(Piece *board[8][8], Location *curr_loc,
     return;
   }
 
-  bool move_is_legal = movement_allowed(piece_movement, curr_loc, next_loc,
+  Movements *legal_move = movement_allowed(piece_movement, curr_loc, next_loc,
                                         curr_piece->set_up_movement);
 
-  if (!move_is_legal) {
+
+  if (legal_move == NULL) {
     printf("Movement is not allowed\n");
     return;
   }
 
-  board[next_loc->i][next_loc->j] = curr_piece;
-  board[curr_loc->i][curr_loc->j] = next_piece;
+  bool legal_move_meets_req =  MOVEMENT_CONDITION[legal_move->movement_condition](board, *next_loc, *curr_loc);
+
+  if (!legal_move_meets_req) {
+    printf("Movement is not allowed\n");
+    return;
+  }
+
+
+  curr_piece->total_taken_movements++;
+  board->board[next_loc->i][next_loc->j] = curr_piece;
+  board->board[curr_loc->i][curr_loc->j] = next_piece;
+
+  board->current_player = (board->current_player + 1) % MAX_PLAYER;
 }
 
-void render_board(Piece *board[MAX_COL][MAX_ROW]) {
+void render_board(Board *board) {
   printf("*");
   for (int i = 0; i < MAX_ROW; i++) {
     printf("%d", i);
@@ -104,7 +144,7 @@ void render_board(Piece *board[MAX_COL][MAX_ROW]) {
   for (int i = 0; i < MAX_COL; i++) {
     printf("%d", i);
     for (int j = 0; j < MAX_ROW; j++) {
-      printf("%s", board[i][j]->piece_symbol);
+      printf("%s", board->board[i][j]->piece_symbol);
     }
     printf("\n");
   }

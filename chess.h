@@ -46,26 +46,32 @@ typedef struct Piece {
   Movements allowed_movements[8];
   int set_up_movement;
   Player player;
+  int total_taken_movements;
   Location *taken_move_state;
 } Piece;
 
-void move_piece(Piece *piece[8][8], Location *curr_loc,
+typedef struct Board {
+  Player player_order[2];
+  Piece *board[8][8];
+  Player current_player;
+} Board;
+
+void move_piece(Board *board, Location *curr_loc,
                 Location *next_loc);
 
-void render_board(Piece *board[8][8]);
+Board initialize_board(Piece *pieces[8][8], Player player_order[2]);
+
+void render_board(Board *board);
 
 void set_direction_rule(Direction direction, int i, int j);
+
+void set_movement_condition_rule(MovementCondition condition, bool (*f)(Board*, Location, Location));
 
 Piece *create_piece(char piece_symbol[8],
                            Movements allowed_movements[8],
                            int set_up_movement, Player player);
 
-Piece *get_move_rule(char piece[4]);
-
-bool satisfy_movement_condition(Piece *target_piece_position,
-                                MovementCondition condition);
-
-bool movement_allowed(Movements *allowed_movements,
+Movements *movement_allowed(Movements *allowed_movements,
                       const Location *curr_loc,
                       const Location *next_location,
                       int total_movement_rule);
