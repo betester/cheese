@@ -2,6 +2,7 @@
 #include "chess.h"
 #include <stdbool.h>
 #include <stdio.h>
+#include <string.h>
 
 #define WHITE_PAWN "♙"
 #define WHITE_KNIGHT "♘"
@@ -16,7 +17,6 @@
 #define BLACK_ROOK "♜"
 #define BLACK_QUEEN "♛"
 #define BLACK_KING "♚"
-#define EMPTY_PEICE "-"
 
 bool occupied_by_opps_rule(Board *board, Location opp_location, Location our_location) {
     Piece *opps_piece = board->board[opp_location.i][opp_location.j];
@@ -50,21 +50,54 @@ bool not_attacked_rule(Board *board, const Location opps_location, const Locatio
     return true;
 }
 
-bool en_passant_rule(Board *board, const Location opps_location, const Location our_location) {
+bool en_passant_rule(Board *board, const Location next_loc, const Location curr_loc) {
+
+    // next loc has to be empty
+    if (board->board[next_loc.i][next_loc.j] != NULL) {
+        return false;
+    }
+
+    Piece* curr_piece = board->board[curr_loc.i][curr_loc.j];
+    Piece* next_piece;
+
+    if (curr_piece->player == WHITE) {
+        next_piece = board->board[next_loc.i + 1][next_loc.j];
+    } else {
+        next_piece = board->board[next_loc.i - 1][next_loc.j];
+    }
+
+    if (next_piece->piece_type != PAWN || next_piece->player == curr_piece->player) {
+        return false;
+    }
+
+    if (next_piece->total_taken_movements > 1) {
+        return false;
+    }
+
+    Location last_loc_next_piece = next_piece->taken_move_state[0];
+    
+    // has to take the two step movements
+
+    int step_diff = last_loc_next_piece.i - next_loc.i;
+
+    if (step_diff >= -1 || step_diff <= 1) {
+        return false;
+    }
+
     return true;
 }
 
 int main() {
 
     Movements king_movements[8] = {
-        {1, DOWN, NOT_ATTACKED},
-        {1, UP, NOT_ATTACKED},
-        {1, LEFT, NOT_ATTACKED},
-        {1, RIGHT, NOT_ATTACKED},
-        {1, DIAGONAL_UP_RIGHT, NOT_ATTACKED},
-        {1, DIAGONAL_UP_LEFT, NOT_ATTACKED},
-        {1, DIAGONAL_DOWN_LEFT, NOT_ATTACKED},
-        {1, DIAGIONAL_DOWN_RIGHT, NOT_ATTACKED},
+        {1, DOWN, 1, {NOT_ATTACKED}},
+        {1, UP, 1, {NOT_ATTACKED}},
+        {1, LEFT, 1, {NOT_ATTACKED}},
+        {1, RIGHT, 1, {NOT_ATTACKED}},
+        {1, DIAGONAL_UP_RIGHT, 1, {NOT_ATTACKED}},
+        {1, DIAGONAL_UP_LEFT, 1, {NOT_ATTACKED}},
+        {1, DIAGONAL_DOWN_LEFT, 1, {NOT_ATTACKED}},
+        {1, DIAGIONAL_DOWN_RIGHT, 1, {NOT_ATTACKED}},
     };
 
     Movements queen_movements[8] = {
@@ -90,17 +123,17 @@ int main() {
     };
 
     Movements black_pawn_movement[8] = {
-        {1, DOWN},
-        {2, DOWN, ONLY_ONCE},
-        {1, DIAGONAL_DOWN_LEFT, OCCUPIED_BY_OPPS},
-        {1, DIAGIONAL_DOWN_RIGHT, OCCUPIED_BY_OPPS}
+        {1, DOWN, 0},
+        {2, DOWN, 1, {ONLY_ONCE}},
+        {1, DIAGONAL_DOWN_LEFT, 2, {OCCUPIED_BY_OPPS, EN_PASSANT}},
+        {1, DIAGIONAL_DOWN_RIGHT, 2, {OCCUPIED_BY_OPPS, EN_PASSANT}}
     };
 
     Movements white_pawn_movement[8] = {
-        {1, UP},
-        {2, UP, ONLY_ONCE},
-        {1, DIAGONAL_UP_LEFT, OCCUPIED_BY_OPPS},
-        {1, DIAGONAL_UP_RIGHT, OCCUPIED_BY_OPPS}
+        {1, UP, 0},
+        {2, UP, 1, {ONLY_ONCE}},
+        {1, DIAGONAL_UP_LEFT, 2, {OCCUPIED_BY_OPPS, EN_PASSANT}},
+        {1, DIAGONAL_UP_RIGHT, 2, {OCCUPIED_BY_OPPS, EN_PASSANT}}
     };
 
     Movements bishop_movements[8] = {
@@ -117,19 +150,17 @@ int main() {
         {7, RIGHT}
     };
 
-    Movements empty_piece_movement[8] = {};
+    Piece *black_king = create_piece(KING, BLACK_KING, king_movements, 8, BLACK);
+    Piece *black_queen = create_piece(QUEEN, BLACK_QUEEN, queen_movements, 8, BLACK);
+    Piece *black_knight = create_piece(KNIGHT, BLACK_KNIGHT, knight_movement, 8, BLACK);
+    Piece *black_bishop = create_piece(BISHOP, BLACK_BISHOP, bishop_movements, 8, BLACK);
+    Piece *black_rook = create_piece(ROOK, WHITE_ROOK, rook_movements, 4, WHITE);
 
-    Piece *black_king = create_piece(BLACK_KING, king_movements, 8, BLACK);
-    Piece *black_queen = create_piece(BLACK_QUEEN, queen_movements, 8, BLACK);
-    Piece *black_knight = create_piece(BLACK_KNIGHT, knight_movement, 8, BLACK);
-    Piece *black_bishop = create_piece(BLACK_BISHOP, bishop_movements, 8, BLACK);
-    Piece *black_rook = create_piece(WHITE_ROOK, rook_movements, 4, WHITE);
-
-    Piece *white_queen = create_piece(WHITE_QUEEN, queen_movements, 8, WHITE);
-    Piece *white_king = create_piece(WHITE_KING, king_movements, 8, WHITE);
-    Piece *white_knight = create_piece(WHITE_KNIGHT, knight_movement, 8, WHITE);
-    Piece *white_bishop = create_piece(WHITE_BISHOP, bishop_movements, 8, WHITE);
-    Piece *white_rook = create_piece(WHITE_ROOK, rook_movements, 4, WHITE);
+    Piece *white_queen = create_piece(QUEEN, WHITE_QUEEN, queen_movements, 8, WHITE);
+    Piece *white_king = create_piece(KING, WHITE_KING, king_movements, 8, WHITE);
+    Piece *white_knight = create_piece(KNIGHT, WHITE_KNIGHT, knight_movement, 8, WHITE);
+    Piece *white_bishop = create_piece(BISHOP, WHITE_BISHOP, bishop_movements, 8, WHITE);
+    Piece *white_rook = create_piece(ROOK, WHITE_ROOK, rook_movements, 4, WHITE);
 
     set_direction_rule(UP, -1, 0);
     set_direction_rule(LEFT, 0, -1);
@@ -151,6 +182,7 @@ int main() {
     set_movement_condition_rule(OCCUPIED_BY_OPPS, occupied_by_opps_rule);
     set_movement_condition_rule(ONLY_ONCE, only_once_rule);
     set_movement_condition_rule(NOT_ATTACKED, not_attacked_rule);
+    set_movement_condition_rule(EN_PASSANT, en_passant_rule);
 
     Piece *chess_board[8][8] = {
         {black_rook, black_knight, black_bishop, black_king, black_queen, black_bishop, black_knight, black_rook},
@@ -165,19 +197,12 @@ int main() {
 
     // fills up the second upper row with black pawn
     for (int i = 0; i < 8; i++) {
-        chess_board[1][i] = create_piece(BLACK_PAWN, black_pawn_movement, 8, BLACK);
+        chess_board[1][i] = create_piece(PAWN, BLACK_PAWN, black_pawn_movement, 8, BLACK);
     }
 
     // fills up the second lower row with white pawn
     for (int i = 0; i < 8; i++) {
-        chess_board[6][i] = create_piece(WHITE_PAWN, white_pawn_movement, 8, WHITE);
-    }
-
-    // filling up those null values
-    for (int i = 2; i <= 5; i++) {
-        for (int j = 0; j < 8; j++) {
-            chess_board[i][j] = create_piece(EMPTY_PEICE, empty_piece_movement, 0, NEUTRAL);
-        }
+        chess_board[6][i] = create_piece(PAWN, WHITE_PAWN, white_pawn_movement, 8, WHITE);
     }
 
     Player player_order[2] = {WHITE, BLACK}; 

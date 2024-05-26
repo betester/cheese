@@ -21,13 +21,18 @@ void set_direction_rule(Direction direction, int i, int j) {
   DIRECTION_MOVEMENTS[direction][1] = j;
 }
 
-Piece *create_piece(char piece_symbol[8],
-                           Movements allowed_movements[8],
-                           int set_up_movement, Player player) {
+Piece *create_piece(PieceType piece_type,
+                    char piece_symbol[8],
+                    Movements allowed_movements[8],
+                    int set_up_movement, 
+                    Player player) {
+
   Piece *piece = (struct Piece*) malloc(sizeof(Piece));
+
   strcpy(piece->piece_symbol, piece_symbol);
   piece->set_up_movement = set_up_movement;
   piece->player = player;
+  piece->piece_type = piece_type;
 
   for (int i = 0; i < set_up_movement; i++) {
     piece->allowed_movements[i] = allowed_movements[i];
@@ -119,8 +124,14 @@ void move_piece(Board *board, Location *curr_loc,
     return;
   }
 
-  bool legal_move_meets_req =  MOVEMENT_CONDITION[legal_move->movement_condition](board, *next_loc, *curr_loc);
+  printf("%d", legal_move->total_movement_condition);
+  bool legal_move_meets_req = legal_move->total_movement_condition == 0;
 
+  // surely there will be no or condition right?
+  for (int i = 0; i < legal_move->total_movement_condition; i++) {
+    legal_move_meets_req = MOVEMENT_CONDITION[legal_move->movement_condition[i]](board, *next_loc, *curr_loc);
+  }
+   
   if (!legal_move_meets_req) {
     printf("Movement is not allowed\n");
     return;
@@ -129,6 +140,7 @@ void move_piece(Board *board, Location *curr_loc,
 
   curr_piece->total_taken_movements++;
   board->board[next_loc->i][next_loc->j] = curr_piece;
+  // TODO: handle when a piece attacks another piece
   board->board[curr_loc->i][curr_loc->j] = next_piece;
 
   board->current_player = (board->current_player + 1) % MAX_PLAYER;
@@ -144,7 +156,11 @@ void render_board(Board *board) {
   for (int i = 0; i < MAX_COL; i++) {
     printf("%d", i);
     for (int j = 0; j < MAX_ROW; j++) {
-      printf("%s", board->board[i][j]->piece_symbol);
+      if (board->board[i][j] == NULL) {
+      printf("-");
+      } else {
+        printf("%s", board->board[i][j]->piece_symbol);
+      }
     }
     printf("\n");
   }

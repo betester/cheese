@@ -28,7 +28,16 @@ typedef enum MovementCondition {
   OCCUPIED_BY_OPPS
 } MovementCondition;
 
-typedef enum Player { BLACK, WHITE, NEUTRAL } Player;
+typedef enum Player { BLACK, WHITE } Player;
+
+typedef enum PieceType {
+  PAWN,
+  QUEEN,
+  KING,
+  BISHOP,
+  ROOK,
+  KNIGHT
+} PieceType;
 
 typedef struct Location {
   unsigned int i;
@@ -38,7 +47,8 @@ typedef struct Location {
 typedef struct Movements {
   unsigned int max_movement : 3;
   Direction direction;
-  MovementCondition movement_condition;
+  int total_movement_condition;
+  MovementCondition movement_condition[2];
 } Movements;
 
 typedef struct Piece {
@@ -47,6 +57,7 @@ typedef struct Piece {
   int set_up_movement;
   Player player;
   int total_taken_movements;
+  PieceType piece_type;
   Location *taken_move_state;
 } Piece;
 
@@ -67,9 +78,10 @@ void set_direction_rule(Direction direction, int i, int j);
 
 void set_movement_condition_rule(MovementCondition condition, bool (*f)(Board*, Location, Location));
 
-Piece *create_piece(char piece_symbol[8],
-                           Movements allowed_movements[8],
-                           int set_up_movement, Player player);
+Piece *create_piece(PieceType piece_type,
+                    char piece_symbol[8],
+                    Movements allowed_movements[8],
+                    int set_up_movement, Player player);
 
 Movements *movement_allowed(Movements *allowed_movements,
                       const Location *curr_loc,
