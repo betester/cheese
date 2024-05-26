@@ -43,11 +43,6 @@ Piece *create_piece(PieceType piece_type,
   return piece;
 }
 
-bool satisfy_movement_condition(Piece *target_piece_position,
-                                MovementCondition condition) {
-  return false;
-}
-
 
 void set_movement_condition_rule(MovementCondition condition, bool (*f)(Board *, Location, Location)) {
   MOVEMENT_CONDITION[condition] = f;
@@ -72,28 +67,43 @@ Board initialize_board(Piece* pieces[8][8], Player* player_order) {
   return board;
 }
 
-Movements *movement_allowed(Movements *allowed_movements,
-                      const Location *curr_loc,
-                      const Location *next_location,
-                      int total_movement_rule) {
-  Movements *allowed_movement = NULL;
+Movements *movement_allowed(Board * board,
+                            Movements *allowed_movements,
+                            const Location *curr_loc, 
+                            const Location *next_location, 
+                            int total_movement_rule) {
+
   for (int i = 0; i < total_movement_rule; i++) {
-    bool current_movement_is_allowed = false;
+
     for (int j = 1; j <= allowed_movements[i].max_movement; j++) {
+      // i dont know why i wrote it as column instead of rows
       int column_translation = curr_loc->i + DIRECTION_MOVEMENTS[allowed_movements[i].direction][0] * j;
       int row_translation = curr_loc->j + DIRECTION_MOVEMENTS[allowed_movements[i].direction][1] * j;
-      current_movement_is_allowed = current_movement_is_allowed|| (next_location->i == column_translation && next_location->j == row_translation);
-    }
-    
-    if (current_movement_is_allowed) {
-      allowed_movements = &allowed_movements[i];
+
+      // invalid can't move while there is a piece blocking the way
+      bool occupied = board->board[column_translation][row_translation] != NULL;
+      bool can_reach_loc = next_location->i == column_translation && next_location->j == row_translation;
+
+      if (!can_reach_loc && occupied) {
+        break;
+      } else if (can_reach_loc) {
+        return &allowed_movements[i];
+      } 
     }
   }
-  return allowed_movements;
+  return NULL;
 };
+
+void __update_piece_movement_state(Piece *piece, const Location taken_step) {
+  // i have no idea whehter i should save the pointer towards location or the copy, for now just the copy?
+  piece->total_taken_movements += 1;
+  piece->taken_move_state = realloc(piece->taken_move_state, piece->total_taken_movements);
+  piece->taken_move_state[piece->total_taken_movements - 1] = taken_step;
+}
 
 void move_piece(Board *board, Location *curr_loc,
                 Location *next_loc) {
+
   if (next_loc->i < 0 || next_loc->i >= MAX_ROW || next_loc->j < 0 ||
       next_loc->j >= MAX_COL) {
     printf("Out of bounds move, piece will not be moved");
@@ -103,8 +113,18 @@ void move_piece(Board *board, Location *curr_loc,
   Piece *curr_piece = board->board[curr_loc->i][curr_loc->j];
   Piece *next_piece = board->board[next_loc->i][next_loc->j];
 
+  if (curr_piece == NULL) {
+    printf("Cannot move empty piece\n");
+    return; 
+  }
+
   if (curr_piece->player != board->player_order[board->current_player]) {
     printf("player %d cannot make move because player %d should make the move\n", curr_piece->player, board->player_order[board->current_player]);
+    return;
+  }
+
+  if (next_piece != NULL && curr_piece->player == next_piece->player) {
+    printf("Cannot attack your own piece\n");
     return;
   }
 
@@ -115,7 +135,7 @@ void move_piece(Board *board, Location *curr_loc,
     return;
   }
 
-  Movements *legal_move = movement_allowed(piece_movement, curr_loc, next_loc,
+  Movements *legal_move = movement_allowed(board, piece_movement, curr_loc, next_loc,
                                         curr_piece->set_up_movement);
 
 
@@ -129,19 +149,24 @@ void move_piece(Board *board, Location *curr_loc,
 
   // surely there will be no or condition right?
   for (int i = 0; i < legal_move->total_movement_condition; i++) {
-    legal_move_meets_req = MOVEMENT_CONDITION[legal_move->movement_condition[i]](board, *next_loc, *curr_loc);
+    legal_move_meets_req |= MOVEMENT_CONDITION[legal_move->movement_condition[i]](board, *next_loc, *curr_loc);
   }
    
   if (!legal_move_meets_req) {
-    printf("Movement is not allowed\n");
+    printf("Movement does not obey the requirement\n");
     return;
   }
 
+  // making sure not memory leakagedge
+  if (next_piece != NULL) {
+    free(next_piece);
+  }
 
-  curr_piece->total_taken_movements++;
+  __update_piece_movement_state(curr_piece, *next_loc);
+
   board->board[next_loc->i][next_loc->j] = curr_piece;
-  // TODO: handle when a piece attacks another piece
-  board->board[curr_loc->i][curr_loc->j] = next_piece;
+  // either way, the piece is going to be removed right 
+  board->board[curr_loc->i][curr_loc->j] = NULL;
 
   board->current_player = (board->current_player + 1) % MAX_PLAYER;
 }

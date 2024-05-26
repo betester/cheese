@@ -83,7 +83,9 @@ Piece *create_piece(PieceType piece_type,
                     Movements allowed_movements[8],
                     int set_up_movement, Player player);
 
-Movements *movement_allowed(Movements *allowed_movements,
+Movements *movement_allowed(
+                      Board *board,
+                      Movements *allowed_movements,
                       const Location *curr_loc,
                       const Location *next_location,
                       int total_movement_rule);

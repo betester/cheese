@@ -22,7 +22,7 @@ bool occupied_by_opps_rule(Board *board, Location opp_location, Location our_loc
     Piece *opps_piece = board->board[opp_location.i][opp_location.j];
     Piece *our_piece = board->board[our_location.i][our_location.j];
 
-    return our_piece->player != opps_piece->player;
+    return opps_piece != NULL && our_piece->player != opps_piece->player;
 }
 
 bool only_once_rule(Board *board, Location opp_location, Location our_location) {
@@ -40,7 +40,7 @@ bool not_attacked_rule(Board *board, const Location opps_location, const Locatio
             Piece *piece = board->board[i][j];
             if (piece != NULL && piece->player != our_piece->player) {
                 Movements *movements = piece->allowed_movements;
-                if (movement_allowed(movements, &opps_location, &our_location, piece->set_up_movement) != NULL) {
+                if (movement_allowed(board, movements, &opps_location, &our_location, piece->set_up_movement) != NULL) {
                     return false;
                 }
             }
