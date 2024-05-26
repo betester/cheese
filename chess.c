@@ -3,22 +3,40 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 
 #define TOTAL_PIECE 12
 #define MAX_ROW 8
 #define MAX_COL 8
 #define MAX_PLAYER 2
 #define MAX_MOVEMENT_CONDITION 4
+#define MAX_MOVEMENT_EVENT_HANDLER 5
 
 Piece CHAR_MOVEMENTS[TOTAL_PIECE];
 int DIRECTION_MOVEMENTS[TOTAL_PIECE][2];
 bool (*MOVEMENT_CONDITION[MAX_MOVEMENT_CONDITION]) (Board *board, Location opps_location, Location our_location);
+void (*AFTER_MOVE_EVENT_HANDLER[MAX_MOVEMENT_EVENT_HANDLER]) (Board *board, const Player *player, const Location *last_played);
 
-int total_piece_movement_set = -1;
+int total_move_event_handler = -1;
+
+//TODO: 
+// 1. Handle pawn promotion
+// 2. Handle king castle
+// 3. Handle checkmate
+
 
 void set_direction_rule(Direction direction, int i, int j) {
   DIRECTION_MOVEMENTS[direction][0] = i;
   DIRECTION_MOVEMENTS[direction][1] = j;
+}
+
+Location get_direction(Direction direction) {
+
+  Location loc; 
+  loc.i = DIRECTION_MOVEMENTS[direction][0];
+  loc.j = DIRECTION_MOVEMENTS[direction][1];
+  
+  return loc;
 }
 
 Piece *create_piece(PieceType piece_type,
@@ -46,6 +64,11 @@ Piece *create_piece(PieceType piece_type,
 
 void set_movement_condition_rule(MovementCondition condition, bool (*f)(Board *, Location, Location)) {
   MOVEMENT_CONDITION[condition] = f;
+}
+
+void add_move_event_handler(void (*f)(Board *, const Player *, const Location *)) {
+  total_move_event_handler++;
+  AFTER_MOVE_EVENT_HANDLER[total_move_event_handler] = f;
 }
 
 Board initialize_board(Piece* pieces[8][8], Player* player_order) {
@@ -171,7 +194,14 @@ void move_piece(Board *board, Location *curr_loc,
   board->current_player = (board->current_player + 1) % MAX_PLAYER;
 }
 
+// prolly gonna use after all bugs are fixed
+void clearScreen() {
+    printf("\033[2J");    
+    printf("\033[H");    
+}
+
 void render_board(Board *board) {
+
   printf("*");
   for (int i = 0; i < MAX_ROW; i++) {
     printf("%d", i);

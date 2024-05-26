@@ -62,6 +62,8 @@ typedef struct Piece {
 } Piece;
 
 typedef struct Board {
+  bool king_under_check;
+  bool shahmat;
   Player player_order[2];
   Piece *board[8][8];
   Player current_player;
@@ -76,7 +78,11 @@ void render_board(Board *board);
 
 void set_direction_rule(Direction direction, int i, int j);
 
+Location get_direction(Direction direction);
+
 void set_movement_condition_rule(MovementCondition condition, bool (*f)(Board*, Location, Location));
+
+void add_move_event_handler(void (*f)(Board*, const Player*, const Location*));
 
 Piece *create_piece(PieceType piece_type,
                     char piece_symbol[8],

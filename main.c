@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 #define WHITE_PAWN "♙"
 #define WHITE_KNIGHT "♘"
@@ -87,6 +88,138 @@ bool en_passant_rule(Board *board, const Location next_loc, const Location curr_
     return true;
 }
 
+void pawn_reach_end_of_board_event(Board *board, const Player *player, const Location *last_loc) {
+    Piece *piece = board->board[last_loc->i][last_loc->j];
+    
+    if (piece->piece_type != PAWN) {
+        return;
+    }
+
+    // handle white pawn
+    if (*player == WHITE && last_loc->i == 0) {
+        //TODO: emit piece selection
+        printf("You should be selecting something brother\n");
+        return;
+    }
+
+    if (*player == BLACK && last_loc->i == 7) {
+        //TODO: emit piece selection
+        printf("You should be selecting something brother\n");
+        return;
+    }
+}
+
+void king_in_check_event(Board *board, const Player *player, const Location *last_loc) {
+    // only the opposing king can be in check
+    
+    // this is really expensive but since it's 8 x 8 at most probably around 64 maybe... 
+    // in one game chess probably around 60 to 100 movments at most so 6400 computation ¯\_(ツ)_/¯
+    
+    Location king_loc;
+    bool found_the_king = false;
+
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            Piece *curr_piece = board->board[i][j];
+            if (curr_piece->piece_type == KING && curr_piece->player != *player) {
+                king_loc.i = i;
+                king_loc.j = j;
+                found_the_king = true;
+                break;
+            }
+        }
+
+        if (found_the_king) {
+            break;
+        }
+    }
+
+    // i should refactor this into a single function which is called is my piece under attack but im too lazy
+
+    bool king_under_attack_bro = false;
+    // checks whether the king is under attack
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            Piece *piece = board->board[i][j];
+            Location loc = {i, j};
+            if (piece != NULL && piece->player != *player) {
+                Movements *movements = piece->allowed_movements;
+                if (movement_allowed(board, movements, &loc, &king_loc, piece->set_up_movement) != NULL) {
+                    king_under_attack_bro = true;
+                    break;
+                }
+            }
+        }
+        if (king_under_attack_bro) {
+            break;
+        }
+    }
+
+    // so if it happens the player move the king, then it will be updated as well
+    board->king_under_check = king_under_attack_bro;
+}
+
+void king_is_checkmated_event(Board *board, const Player *player, const Location *last_loc) {
+
+    // this one should be refactored as well? find piece for example?
+    
+    Location king_loc;
+    bool found_the_king;
+
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 8; j++) {
+            Piece *curr_piece = board->board[i][j];
+            if (curr_piece->piece_type == KING && curr_piece->player != *player) {
+                king_loc.i = i;
+                king_loc.j = j;
+                found_the_king = true;
+                break;
+            }
+        }
+        if (found_the_king) {
+            break;
+        }
+    }
+
+    Piece *king_piece = board->board[king_loc.i][king_loc.j];
+    
+    // there could also be a stalemate case 
+    
+    bool attacked_from_all_direction = true;
+
+    for (int i = 0; i < king_piece->set_up_movement; i++) {
+
+        Direction direction = king_piece->allowed_movements[i].direction;
+        Location direction_offset = get_direction(direction);
+
+        Location loc_to_be_checked; 
+
+        loc_to_be_checked.i = direction_offset.i + king_loc.i;
+        loc_to_be_checked.j = direction_offset.j + king_loc.j;
+
+        bool this_direction_is_attacked = false;
+
+        for (int i = 0; i < 8; i++) {
+            for (int j = 0; j < 8; j++) {
+                Piece *piece = board->board[i][j];
+                Location loc = {i, j};
+                if (piece != NULL && piece->player != *player) {
+                    Movements *movements = piece->allowed_movements;
+                    this_direction_is_attacked = this_direction_is_attacked || (movement_allowed(board, movements, &loc, &loc_to_be_checked, piece->set_up_movement) != NULL);
+                }
+            }
+        }
+
+        attacked_from_all_direction = attacked_from_all_direction && this_direction_is_attacked;
+    }
+
+    // the problem with stalemate is that it only happens when other pieces could not move
+    // TODO: handle stalemate case
+    if (attacked_from_all_direction && board->king_under_check) {
+        board->shahmat = true;
+    }
+}
+
 int main() {
 
     Movements king_movements[8] = {
@@ -101,25 +234,25 @@ int main() {
     };
 
     Movements queen_movements[8] = {
-        {7, DOWN},
-        {7, UP},
-        {7, LEFT},
-        {7, RIGHT},
-        {7, DIAGONAL_UP_RIGHT},
-        {7, DIAGONAL_UP_LEFT},
-        {7, DIAGONAL_DOWN_LEFT},
-        {7, DIAGIONAL_DOWN_RIGHT},
+        {7, DOWN, 0},
+        {7, UP, 0},
+        {7, LEFT, 0},
+        {7, RIGHT, 0},
+        {7, DIAGONAL_UP_RIGHT, 0},
+        {7, DIAGONAL_UP_LEFT, 0},
+        {7, DIAGONAL_DOWN_LEFT, 0},
+        {7, DIAGIONAL_DOWN_RIGHT, 0},
     };
 
     Movements knight_movement[8] =  {
-        {1, L_STAND_TOP_LEFT},
-        {1, L_SLEEP_TOP_LEFT},
-        {1, L_STAND_TOP_RIGHT},
-        {1, L_SLEEP_TOP_RIGHT},
-        {1, L_STAND_BOTTOM_LEFT},
-        {1, L_SLEEP_BOTTOM_LEFT},
-        {1, L_STAND_BOTTOM_RIGHT},
-        {1, L_SLEEP_BOTTOM_RIGHT},
+        {1, L_STAND_TOP_LEFT, 0},
+        {1, L_SLEEP_TOP_LEFT, 0},
+        {1, L_STAND_TOP_RIGHT, 0},
+        {1, L_SLEEP_TOP_RIGHT, 0},
+        {1, L_STAND_BOTTOM_LEFT, 0},
+        {1, L_SLEEP_BOTTOM_LEFT, 0},
+        {1, L_STAND_BOTTOM_RIGHT, 0},
+        {1, L_SLEEP_BOTTOM_RIGHT, 0},
     };
 
     Movements black_pawn_movement[8] = {
@@ -137,30 +270,36 @@ int main() {
     };
 
     Movements bishop_movements[8] = {
-        {7, DIAGONAL_UP_LEFT},
-        {7, DIAGONAL_UP_RIGHT},
-        {7, DIAGONAL_DOWN_LEFT},
-        {7, DIAGIONAL_DOWN_RIGHT}
+        {7, DIAGONAL_UP_LEFT, 0},
+        {7, DIAGONAL_UP_RIGHT, 0},
+        {7, DIAGONAL_DOWN_LEFT, 0},
+        {7, DIAGIONAL_DOWN_RIGHT, 0}
     };
 
     Movements rook_movements[8] = {
-        {7, UP},
-        {7, DOWN},
-        {7, LEFT},
-        {7, RIGHT}
+        {7, UP, 0},
+        {7, DOWN, 0},
+        {7, LEFT, 0},
+        {7, RIGHT, 0}
     };
 
     Piece *black_king = create_piece(KING, BLACK_KING, king_movements, 8, BLACK);
     Piece *black_queen = create_piece(QUEEN, BLACK_QUEEN, queen_movements, 8, BLACK);
-    Piece *black_knight = create_piece(KNIGHT, BLACK_KNIGHT, knight_movement, 8, BLACK);
-    Piece *black_bishop = create_piece(BISHOP, BLACK_BISHOP, bishop_movements, 8, BLACK);
-    Piece *black_rook = create_piece(ROOK, WHITE_ROOK, rook_movements, 4, WHITE);
+    Piece *first_black_knight = create_piece(KNIGHT, BLACK_KNIGHT, knight_movement, 8, BLACK);
+    Piece *second_black_knight = create_piece(KNIGHT, BLACK_KNIGHT, knight_movement, 8, BLACK);
+    Piece *first_black_bishop = create_piece(BISHOP, BLACK_BISHOP, bishop_movements, 8, BLACK);
+    Piece *second_black_bishop = create_piece(BISHOP, BLACK_BISHOP, bishop_movements, 8, BLACK);
+    Piece *first_black_rook = create_piece(ROOK, WHITE_ROOK, rook_movements, 4, WHITE);
+    Piece *second_black_rook = create_piece(ROOK, WHITE_ROOK, rook_movements, 4, WHITE);
 
     Piece *white_queen = create_piece(QUEEN, WHITE_QUEEN, queen_movements, 8, WHITE);
     Piece *white_king = create_piece(KING, WHITE_KING, king_movements, 8, WHITE);
-    Piece *white_knight = create_piece(KNIGHT, WHITE_KNIGHT, knight_movement, 8, WHITE);
-    Piece *white_bishop = create_piece(BISHOP, WHITE_BISHOP, bishop_movements, 8, WHITE);
-    Piece *white_rook = create_piece(ROOK, WHITE_ROOK, rook_movements, 4, WHITE);
+    Piece *first_white_knight = create_piece(KNIGHT, WHITE_KNIGHT, knight_movement, 8, WHITE);
+    Piece *second_white_knight = create_piece(KNIGHT, WHITE_KNIGHT, knight_movement, 8, WHITE);
+    Piece *first_white_bishop = create_piece(BISHOP, WHITE_BISHOP, bishop_movements, 8, WHITE);
+    Piece *second_white_bishop = create_piece(BISHOP, WHITE_BISHOP, bishop_movements, 8, WHITE);
+    Piece *first_white_rook = create_piece(ROOK, WHITE_ROOK, rook_movements, 4, WHITE);
+    Piece *second_white_rook = create_piece(ROOK, WHITE_ROOK, rook_movements, 4, WHITE);
 
     set_direction_rule(UP, -1, 0);
     set_direction_rule(LEFT, 0, -1);
@@ -184,15 +323,19 @@ int main() {
     set_movement_condition_rule(NOT_ATTACKED, not_attacked_rule);
     set_movement_condition_rule(EN_PASSANT, en_passant_rule);
 
+    add_move_event_handler(pawn_reach_end_of_board_event);
+    add_move_event_handler(king_in_check_event);
+    add_move_event_handler(king_is_checkmated_event);
+
     Piece *chess_board[8][8] = {
-        {black_rook, black_knight, black_bishop, black_king, black_queen, black_bishop, black_knight, black_rook},
+        {first_black_rook,  first_black_bishop, first_black_knight,  black_queen, black_king, second_black_knight, second_black_bishop, second_black_rook},
         {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
         {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
         {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
         {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
         {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
         {NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL},
-        {white_rook, white_knight, white_bishop, white_king, white_queen, white_bishop, white_knight, white_rook}
+        {first_white_rook, first_white_bishop, first_white_knight, white_queen, white_king, second_white_knight, second_white_bishop, second_white_rook}
     };
 
     // fills up the second upper row with black pawn
